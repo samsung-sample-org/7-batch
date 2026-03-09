@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: batch-verification
+  # H2 인메모리 DB (Spring Batch 5 메타 테이블 자동 생성)
+  datasource:
+    url: jdbc:h2:mem:batchdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  # Spring Batch 설정
+  batch:
+    # 애플리케이션 시작 시 Job 자동 실행 방지 (테스트에서 직접 실행)
+    job:
+      enabled: false
+    # Spring Batch 5: initialize-schema 설정
+    jdbc:
+      initialize-schema: always
+  # Quartz 설정
+  quartz:
+    job-store-type: memory
+    properties:
+      org:
+        quartz:
+          threadPool:
+            threadCount: 3
+
+server:
+  port: 8082

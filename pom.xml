@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ============================================================== -->
+    <!-- Parent: Spring Boot 3.5.11                                      -->
+    <!-- Spring Boot 3.x는 Jakarta EE 10 기반, JDK 17+ 필수            -->
+    <!-- ============================================================== -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.11</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.ss</groupId>
+    <artifactId>batch</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <name>batch</name>
+    <description>배치 시스템 - Spring Boot 3 전환</description>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+
+        <!-- ============================================================== -->
+        <!-- Boot Starters                                                   -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: Spring Framework 3.2.2 (spring-webmvc 등 개별 의존)
+             TOBE: Spring Framework 6.1+ (Boot 3.5.11 내장) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- ASIS: spring-batch 3.0.3 (Job/Step API 구조 상이)
+             TOBE: Spring Batch 5.x (Boot 관리 버전)
+             핵심 변경: JobBuilderFactory/StepBuilderFactory 제거됨
+             → JobRepository, PlatformTransactionManager 직접 주입 방식으로 전환
+             javax.batch-api(JSR-352) → Spring Batch 5 Jakarta EE 기반 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-batch</artifactId>
+        </dependency>
+
+        <!-- ASIS: aspectj 1.8.14 (개별 의존)
+             TOBE: AspectJ 1.9.21+ (Boot 관리 버전) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- ASIS: quartz 2.2.1 (독립 설정)
+             TOBE: Quartz 2.5+ (Boot 자동 구성, spring-boot-starter-quartz) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+        </dependency>
+
+        <!-- ASIS: JUnit 4 + Spring Test 개별 설정
+             TOBE: JUnit 5 (Jupiter) + Spring Boot Test (Boot 관리 버전) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Batch Test: @SpringBatchTest 지원 -->
+        <dependency>
+            <groupId>org.springframework.batch</groupId>
+            <artifactId>spring-batch-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- DB                                                              -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: h2 1.4.185
+             TOBE: H2 2.2+ (Boot 관리 버전)
+             전환 이유: H2 1.x는 JDK 17 호환 문제, Spring Batch 5 메타 테이블 DDL 변경 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- Apache Commons                                                  -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: commons-codec 1.4
+             TOBE: commons-codec (Boot 관리 버전) -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+
+        <!-- ASIS: commons-configuration 1.10 (org.apache.commons:commons-configuration)
+             TOBE: commons-configuration2 2.10.1 (org.apache.commons:commons-configuration2)
+             전환 이유: configuration 1.x EOL, 2.x에서 artifactId 변경 및 API 재설계 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
+        <!-- ASIS: commons-io 2.4
+             TOBE: commons-io 2.16.1
+             전환 이유: FileUtils, IOUtils 개선, JDK 8+ NIO 지원 -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+
+        <!-- ASIS: commons-lang 2.6 → lang3으로 완전 전환 (commons-lang 2.x 제거)
+             TOBE: commons-lang3 (Boot 관리 버전)
+             전환 이유: lang 2.x → lang3으로 패키지 변경(org.apache.commons.lang3) -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <!-- ASIS: commons-math3 3.6.1
+             TOBE: commons-math3 3.6.1 (동일 버전 유지) -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
+
+        <!-- ASIS: commons-pool 1.x → pool2로 전환 (commons-pool 1.x 제거)
+             TOBE: commons-pool2 2.12.0
+             전환 이유: pool 1.x EOL, 2.x에서 GenericObjectPool 완전 재설계 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.12.0</version>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- HTTP Client                                                     -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: httpclient 4.3.1 (org.apache.httpcomponents:httpclient)
+             TOBE: httpclient5 (Boot 관리 버전, org.apache.httpcomponents.client5:httpclient5)
+             전환 이유: HttpClient 4.x EOL 예정, 5.x에서 HTTP/2 지원, groupId 완전 변경 -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- XML / JSON                                                      -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: jettison 1.2
+             TOBE: jettison 1.5.4
+             전환 이유: XML↔JSON 변환 보안 패치 적용 -->
+        <dependency>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+            <version>1.5.4</version>
+        </dependency>
+
+        <!-- ASIS: json-simple (유지, 비권장)
+             TOBE: json-simple 1.1.1 (동일 버전, 신규 개발 시 Jackson/Gson 권장)
+             주의: json-simple은 유지보수 중단 상태이나 기존 코드 호환을 위해 유지 -->
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+
+        <!-- ASIS: xstream 1.4.7 (취약점 다수 존재)
+             TOBE: xstream 1.4.21
+             전환 이유: CVE-2021-29505 등 다수 CVE 패치, JDK 17 호환 -->
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.21</version>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- Jakarta / Activation                                            -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: activation 1.1 (JAF, JDK 8까지 포함)
+             TOBE: jakarta.activation-api (Boot 관리 버전)
+             전환 이유: JDK 17에서 javax.activation 제거됨. jakarta 네임스페이스 전환 필수 -->
+        <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- Logging                                                         -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: log4j 1.2.16 (직접 사용 금지)
+             TOBE: log4j-1.2-api + log4j-core (Log4j2 호환 브릿지, Boot 관리 버전)
+             전환 이유: Log4j 1.x EOL(CVE-2019-17571). 기존 org.apache.log4j.Logger API를
+                        유지하면서 실제 로깅은 Log4j2→SLF4J→Logback 체인으로 라우팅.
+                        log4j-1.2-api는 log4j-core에 의존한다. -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-1.2-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- Connection Pool                                                 -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: c3p0 0.9.1.1
+             TOBE: c3p0 0.10.1
+             전환 이유: JDK 17 호환 버전. Boot 기본 HikariCP와 병행하여 기존 설정 유지 가능 -->
+        <dependency>
+            <groupId>com.mchange</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>0.10.1</version>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- Retry                                                           -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: spring-retry 1.1.0
+             TOBE: spring-retry (Boot 관리 버전)
+             전환 이유: Spring Batch 5와 함께 사용되는 재시도 프레임워크 최신화 -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- SnakeYAML                                                       -->
+        <!-- ============================================================== -->
+
+        <!-- ASIS: snakeyaml 1.14
+             TOBE: snakeyaml (Boot 관리 버전, 2.x)
+             전환 이유: snakeyaml 1.x 보안 취약점(CVE-2022-1471) 패치 -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+        </dependency>
+
+        <!-- ============================================================== -->
+        <!-- 제거된 라이브러리 (Boot 3 전환 시 더 이상 필요 없는 의존성)     -->
+        <!-- ============================================================== -->
+        <!--
+            [제거] commons-lang 2.6 (commons-lang:commons-lang)
+              → commons-lang3으로 완전 전환 (org.apache.commons.lang3 패키지)
+              → 기존 org.apache.commons.lang 패키지 사용 코드는 lang3으로 마이그레이션 필요
+
+            [제거] commons-pool 1.x (commons-pool:commons-pool)
+              → commons-pool2로 전환 (GenericObjectPool 등 API 재설계)
+
+            [제거] commons-dbcp 1.4 (commons-dbcp:commons-dbcp)
+              → HikariCP로 대체 (Spring Boot 기본 커넥션 풀)
+              → 성능 및 안정성 측면에서 HikariCP가 우수
+
+            [제거] commons-logging 1.2
+              → SLF4J로 대체 (Spring Boot 기본, spring-jcl 브릿지 내장)
+
+            [제거] log4j 1.2.16
+              → Logback으로 대체 (Spring Boot 기본 로깅)
+              → log4j-1.2-api 브릿지를 통해 기존 org.apache.log4j API 유지 가능
+
+            [제거] servlet-api 2.5 (javax.servlet)
+              → Spring Boot 내장 Servlet 6 Jakarta (jakarta.servlet)
+              → javax → jakarta 네임스페이스 전환 필수
+
+            [제거] jackson 1.9.x (org.codehaus.jackson)
+              → Boot Jackson2 (com.fasterxml.jackson, Boot 관리 버전)
+              → Jackson 1.x EOL, 보안 취약점 다수
+
+            [제거] spring-batch 3.0.3 (개별 의존)
+              → spring-boot-starter-batch (Batch 5)
+              → Job/Step API 대폭 변경: JobBuilderFactory/StepBuilderFactory 제거
+
+            [제거] javax.batch-api (JSR-352)
+              → Spring Batch 5에서 Jakarta EE 기반으로 전환
+              → spring-boot-starter-batch가 관리
+        -->
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin: 실행 가능한 JAR 패키징 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
